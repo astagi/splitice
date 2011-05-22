@@ -40,27 +40,22 @@ int split(const char* filepath, const char* dest_directory, int n_parts, const c
     int pos = 0;
 
     char* mainfile = NULL;
-    char*  relative_filepath = NULL;
 
-    relative_filepath = (char*)malloc(sizeof(char)*strlen(filepath));
+    char*  relative_filepath = NULL;
 
     FILE* mf = NULL;
 
     if((mf = fopen(filepath, "rb")) == NULL)
         return FILE_NOT_FOUND;
 
-    for(i = strlen(filepath); i >= 0; i--)
-        if(filepath[i] == '/')
-        {
-            pos = i + 1;
-            i = 0;
-        }
-
-    sprintf (relative_filepath, "%s", filepath + pos);
+    relative_filepath = filename_from_path(filepath);
 
     mainfile = (char*)malloc((strlen(dest_directory) + strlen(relative_filepath)) * sizeof(char));
 
     sprintf(mainfile, "%s%s", dest_directory, relative_filepath);
+
+    if(fopen(mainfile, "r"))
+        return FILE_EXISTS;
 
     if(fopen(mainfile, "w") == NULL)
         return DEST_NOT_FOUND;
@@ -201,8 +196,24 @@ int __startSplitProcess(FilePart* parts, const char* filepath, int parts_start, 
 
 };
 
-
-int __startSpliceProcess(const char* filepath)
+int splice(const char* filepath, const char* password)
 {
-    //TODO All ;)
-};
+    char*  relative_filepath = NULL;
+    char*  folder_filepath = NULL;
+
+    FILE* mf = NULL;
+
+    if((mf = fopen(filepath, "rb")) == NULL)
+        return FILE_NOT_FOUND;
+    else
+        fclose(mf);
+
+    relative_filepath = filename_from_path(filepath);
+    folder_filepath = folder_from_path(filepath);
+
+    printf("%s %s", folder_filepath, relative_filepath);
+}
+
+
+
+

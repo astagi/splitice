@@ -34,9 +34,10 @@
 
 #define DEST_NOT_FOUND 1
 #define FILE_NOT_FOUND 2
-#define PARTS_ERROR    3
+#define FILE_EXISTS    3
+#define PARTS_ERROR    4
 
 int split(const char* filepath, const char*  dest_directory, int n_parts, const char* password);
-int splice(const char* filepath);
+int splice(const char* filepath, const char* password);
 
 #endif

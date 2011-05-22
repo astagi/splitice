@@ -46,7 +46,8 @@ int main(int argc, char* argv[])
     else if(strcmp(argv[1], CMD_SPLICE) == 0)
     {
         //TODO: implement the splice function
-        splice(filename);
+        scanf("%s", &password);
+        splice(filename, password);
     }
 
     return 0;

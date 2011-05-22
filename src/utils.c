@@ -18,6 +18,7 @@
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <stdlib.h>
 #include "utils.h"
 #include "md5.h"
 
@@ -40,6 +41,49 @@ char* md5(const char* string)
         sprintf (md5_string, "%s%02x", md5_string, mdContext.digest[i]);
    
     return md5_string;
+
+}
+
+char* filename_from_path(const char* filepath)
+{
+
+    int i = 0;
+    int pos = 0;
+
+    char* relative_filepath = NULL;
+
+    relative_filepath = (char*)malloc(sizeof(char)*strlen(filepath));
+
+    for(i = strlen(filepath); i >= 0; i--)
+        if(filepath[i] == '/')
+        {
+            pos = i + 1;
+            i = 0;
+        }
+
+   sprintf (relative_filepath, "%s", filepath + pos);
+
+   return relative_filepath;
+
+}
+
+char* folder_from_path(const char* filepath)
+{
+
+    int i = 0;
+
+    char* folder_filepath = NULL;
+
+    folder_filepath = (char*)malloc(sizeof(char)*strlen(filepath));
+
+    sprintf (folder_filepath, "%s", filepath);
+
+    for(i = strlen(folder_filepath); i >= 0; i--)
+        if(folder_filepath[i] == '/')
+        {
+            folder_filepath[i + 1] = '\0';
+            return folder_filepath;
+        }
 
 }
 

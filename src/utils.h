@@ -31,5 +31,7 @@
 #define __UTILS_H__
 
 char* md5(const char* string);
+char* filename_from_path(const char* filepath);
+char* folder_from_path(const char* filepath);
 
 #endif
