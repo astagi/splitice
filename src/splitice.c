@@ -198,10 +198,23 @@ int __startSplitProcess(FilePart* parts, const char* filepath, int parts_start, 
 
 int splice(const char* filepath, const char* password)
 {
+
+    int i = 0;
+
     char*  relative_filepath = NULL;
     char*  folder_filepath = NULL;
 
+    char*  file_to_fetch = NULL;
+    char*  md5_relative_filepath = NULL;
+
+    off_t size;
+
     FILE* mf = NULL;
+    FILE* newfile = NULL;
+
+    u_char* data;
+
+    struct stat buf;
 
     if((mf = fopen(filepath, "rb")) == NULL)
         return FILE_NOT_FOUND;
@@ -211,7 +224,40 @@ int splice(const char* filepath, const char* password)
     relative_filepath = filename_from_path(filepath);
     folder_filepath = folder_from_path(filepath);
 
-    printf("%s %s", folder_filepath, relative_filepath);
+    file_to_fetch = (char*)malloc(sizeof(char) * 200);
+    md5_relative_filepath = (char*)malloc(sizeof(char) * 50);
+
+    newfile = fopen(filepath, "ab");
+    
+    do{
+        sprintf (md5_relative_filepath, "%s%s%d", relative_filepath, password, i);
+        md5_relative_filepath = md5(md5_relative_filepath);
+        sprintf (file_to_fetch, "%s%s", folder_filepath, md5_relative_filepath);
+        
+        if(mf = fopen(file_to_fetch, "rb"))
+        {
+
+            stat(file_to_fetch, &buf);
+
+            size = buf.st_size;
+
+            data = (u_char*)malloc(size * sizeof(u_char));
+
+            fread(data, sizeof(u_char), size, mf);
+
+            fwrite (data , size, sizeof(u_char) , newfile );
+
+            free(data);
+
+            fclose(mf);
+        }
+
+        i++;
+
+    }while(mf);
+
+    fclose(newfile);
+
 }
 
 
