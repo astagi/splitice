@@ -28,7 +28,7 @@
 
 FilePart* __preparePartsFromFile(const char* filepath, const char* relative_filepath, const char* dest_folder, int n, char* password);
 void* __splitProcess(void* args);
-int __startSplitProcess(FilePart* parts, const char* filepath, int parts_start, int parts_n);
+int __startSplitProcess(pthread_t* thread, FilePart* parts, const char* filepath, int parts_start, int parts_n, int n_parts, pthread_mutex_t* mutex, int* progress);
 int __startSpliceProcess(const char* filepath);
 
 
@@ -38,10 +38,14 @@ int split(const char* filepath, const char* dest_directory, int n_parts, const c
     int i = 0;
     int op = 0;
     int pos = 0;
+    int progress = 0;
 
     char* mainfile = NULL;
+    char* relative_filepath = NULL;
 
-    char*  relative_filepath = NULL;
+    pthread_t* threads = (pthread_t*)malloc(N_PROCESSES * sizeof(pthread_t));
+    pthread_mutex_t mutex;
+    pthread_mutex_init(&mutex, NULL);
 
     FILE* mf = NULL;
 
@@ -80,12 +84,13 @@ int split(const char* filepath, const char* dest_directory, int n_parts, const c
     for(i = 0; i < N_PROCESSES; i++)
     {
         if(i == N_PROCESSES - 1)
-            __startSplitProcess(parts, filepath, parts_per_process * i, parts_per_process + last_parts);
+            __startSplitProcess(&threads[i], parts, filepath, parts_per_process * i, parts_per_process + last_parts, n_parts, &mutex, &progress);
         else
-            __startSplitProcess(parts, filepath, parts_per_process * i, parts_per_process);
+            __startSplitProcess(&threads[i], parts, filepath, parts_per_process * i, parts_per_process, n_parts, &mutex, &progress);
     }
 
-    pthread_exit (NULL);
+    for(i = 0; i < N_PROCESSES; i++)
+        pthread_join(threads[i], NULL);
 
 }
 
@@ -144,7 +149,10 @@ void* __splitProcess(void* args)
     FilePart* parts;
     int parts_start;
     int parts_n;
+    float* progress;
     const char* filepath;
+    pthread_mutex_t* mutex;
+    int n_parts;
 
     SplitParameters* parm;
 
@@ -154,6 +162,9 @@ void* __splitProcess(void* args)
     parts_start = parm->parts_start;
     parts_n = parm->parts_n;
     filepath = parm->filepath;
+    progress = parm->progress;
+    mutex = parm->mutex;
+    n_parts = parm->n_parts;
 
     int i = 0;
     u_char* data;
@@ -163,7 +174,7 @@ void* __splitProcess(void* args)
     printf("\n%s", filepath);
 
     if((mf = fopen(filepath, "rb")) == NULL)
-        return 1;
+        return NULL;
 
     for(i = parts_start; i < parts_start + parts_n; i++)
     {
@@ -175,15 +186,19 @@ void* __splitProcess(void* args)
         fwrite (data , parts[i].dimention , sizeof(u_char) , newfile );
         fclose(newfile);
         free(data);
+        pthread_mutex_lock(mutex);
+        printf("\nProgress %1.0f percent", (++(*progress)/n_parts) * 100.0);
+        pthread_mutex_unlock(mutex);
     }
 
     fclose(mf);
+
+    pthread_exit (0);
 };
 
 
-int __startSplitProcess(FilePart* parts, const char* filepath, int parts_start, int parts_n)
+int __startSplitProcess(pthread_t* thread, FilePart* parts, const char* filepath, int parts_start, int parts_n, int n_parts, pthread_mutex_t* mutex, int* progress)
 {
-    pthread_t thread;
 
     SplitParameters* parm = (SplitParameters*)malloc(sizeof(SplitParameters));
 
@@ -191,8 +206,11 @@ int __startSplitProcess(FilePart* parts, const char* filepath, int parts_start, 
     parm->parts_start = parts_start;
     parm->parts_n = parts_n;
     parm->filepath = filepath;
+    parm->progress = progress;
+    parm->mutex = mutex;
+    parm->n_parts = n_parts;
 
-    pthread_create (&thread, NULL, __splitProcess, (void *)parm);
+    pthread_create (thread, NULL, __splitProcess, (void *)parm);
 
 };
 

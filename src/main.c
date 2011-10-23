@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
     if(strcmp(argv[1], CMD_SPLIT) == 0)
     {
         scanf("%s", &password);
-        split(filename, dest_directory, n_parts, password);
+        printf("%d", split(filename, dest_directory, n_parts, password));
     }
 
     else if(strcmp(argv[1], CMD_SPLICE) == 0)

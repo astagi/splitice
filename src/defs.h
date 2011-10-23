@@ -54,6 +54,9 @@ typedef struct
     int parts_start;
     int parts_n;
     const char* filepath;
+    int* progress;
+    pthread_mutex_t* mutex;
+    int n_parts;
 
 }SplitParameters;
 
